@@ -204,32 +204,42 @@ fun VoiceChatScreen(
                         Text("打断")
                     }
                 } else {
-                    Box(
+                    // 使用简单的 Button，通过 pointerInteropFilter 处理按下/松开
+                    var isPressed by remember { mutableStateOf(false) }
+                    
+                    Button(
+                        onClick = { },
                         modifier = Modifier
                             .size(80.dp)
                             .pointerInput(Unit) {
-                                detectTapGestures(
-                                    onPress = {
-                                        if (!isProcessing) {
-                                            onRecordStart()
-                                            tryAwaitRelease()
-                                            onRecordStop()
+                                awaitPointerEventScope {
+                                    while (true) {
+                                        val event = awaitPointerEvent()
+                                        when (event.type) {
+                                            androidx.compose.ui.input.pointer.PointerEventType.Press -> {
+                                                if (!isProcessing) {
+                                                    isPressed = true
+                                                    onRecordStart()
+                                                }
+                                            }
+                                            androidx.compose.ui.input.pointer.PointerEventType.Release,
+                                            androidx.compose.ui.input.pointer.PointerEventType.Exit -> {
+                                                if (isPressed) {
+                                                    isPressed = false
+                                                    onRecordStop()
+                                                }
+                                            }
                                         }
                                     }
-                                )
+                                }
                             },
-                        contentAlignment = Alignment.Center
+                        enabled = !isProcessing,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (isPressed) MaterialTheme.colorScheme.primaryContainer 
+                                            else MaterialTheme.colorScheme.primary
+                        )
                     ) {
-                        Button(
-                            onClick = { },
-                            modifier = Modifier.fillMaxSize(),
-                            enabled = !isProcessing,
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primary
-                            )
-                        ) {
-                            Text("按住说话")
-                        }
+                        Text(if (isPressed) "录音中..." else "按住说话")
                     }
                 }
             }
