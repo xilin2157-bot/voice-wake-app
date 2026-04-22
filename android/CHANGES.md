@@ -75,3 +75,37 @@
 - [ ] 语音识别测试
 - [ ] API 通信测试
 - [ ] TTS 播报测试
+
+---
+
+## TTS 引擎初始化失败修复 (2026-04-22 第二轮)
+
+### 问题根因
+- 红米/小米设备默认 TTS 引擎（小米语音引擎）可能未初始化或没有中文语音数据
+- TTS 初始化失败后没有引导用户到系统设置页面
+
+### 修复方案
+| 文件 | 变更 | 说明 |
+|------|------|------|
+| TTSPlayer.kt | 重写 | 语言设置降级策略：zh-CN → zh → default → en-US |
+| TTSPlayer.kt | 重写 | 重试次数 2→3 次，间隔 500ms→1000ms |
+| TTSPlayer.kt | 新增 | `openTtsSettings()` 引导用户到系统 TTS 设置 |
+| TTSPlayer.kt | 新增 | 区分 `TTS_ERROR_NEEDS_SETUP` 和 `TTS_ERROR_NO_CHINESE_DATA` 错误码 |
+| MainActivity.kt | 重写 | TTS 错误时弹出 AlertDialog 引导用户去设置 |
+
+### 用户操作流程
+1. 安装新版 APK
+2. 首次打开时，TTS 初始化失败
+3. App 弹出对话框："TTS 引擎初始化失败，需要设置默认语音引擎"
+4. 点击「去设置」→ 跳转到系统 TTS 设置页面
+5. 选择「Google 文字转语音引擎」或安装中文语言包
+6. 返回 App，重试
+
+### 构建产物
+- ✅ app-debug.apk: 9.8MB
+
+### 待验证
+- [ ] 手机端安装新版 APK
+- [ ] 测试 TTS 设置引导对话框
+- [ ] 设置 Google TTS 后验证中文播报
+- [ ] 端到端延迟测试 (< 3 秒)

@@ -33,6 +33,10 @@ class MainActivity : ComponentActivity() {
     private var isSpeaking by mutableStateOf(false)
     private var isProcessing by mutableStateOf(false)
 
+    // TTS 设置引导对话框
+    private var showTtsSetupDialog by mutableStateOf(false)
+    private var ttsSetupMessage by mutableStateOf("")
+
     data class ChatMessage(
         val isUser: Boolean,
         val text: String
@@ -82,7 +86,20 @@ class MainActivity : ComponentActivity() {
             }
             override fun onError(error: String) {
                 isSpeaking = false
-                Toast.makeText(this@MainActivity, "播报错误: $error", Toast.LENGTH_SHORT).show()
+                // ✅ 修复：处理 TTS 引擎设置引导
+                when (error) {
+                    "TTS_ERROR_NEEDS_SETUP" -> {
+                        ttsSetupMessage = "TTS 引擎初始化失败，需要设置默认语音引擎。\n\n请点击「去设置」前往 TTS 设置页面，选择一个支持中文的 TTS 引擎（推荐 Google 文字转语音）。"
+                        showTtsSetupDialog = true
+                    }
+                    "TTS_ERROR_NO_CHINESE_DATA" -> {
+                        ttsSetupMessage = "当前 TTS 引擎没有中文语音数据。\n\n请点击「去设置」前往 TTS 设置页面，选择 Google 文字转语音或安装中文语言包。"
+                        showTtsSetupDialog = true
+                    }
+                    else -> {
+                        Toast.makeText(this@MainActivity, "播报错误: $error", Toast.LENGTH_LONG).show()
+                    }
+                }
             }
         })
 
@@ -96,11 +113,18 @@ class MainActivity : ComponentActivity() {
                         conversationHistory = conversationHistory,
                         isSpeaking = isSpeaking,
                         isProcessing = isProcessing,
+                        showTtsSetupDialog = showTtsSetupDialog,
+                        ttsSetupMessage = ttsSetupMessage,
                         onRecordStart = { voiceRecorder?.startListening() },
                         onRecordStop = { voiceRecorder?.stopListening() },
                         onInterrupt = {
                             ttsPlayer?.stop()
                             isSpeaking = false
+                        },
+                        onDismissTtsDialog = { showTtsSetupDialog = false },
+                        onOpenTtsSettings = {
+                            ttsPlayer?.openTtsSettings()
+                            showTtsSetupDialog = false
                         }
                     )
                 }
@@ -150,9 +174,13 @@ fun VoiceChatScreen(
     conversationHistory: List<MainActivity.ChatMessage>,
     isSpeaking: Boolean,
     isProcessing: Boolean,
+    showTtsSetupDialog: Boolean,
+    ttsSetupMessage: String,
     onRecordStart: () -> Unit,
     onRecordStop: () -> Unit,
-    onInterrupt: () -> Unit
+    onInterrupt: () -> Unit,
+    onDismissTtsDialog: () -> Unit,
+    onOpenTtsSettings: () -> Unit
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -218,7 +246,7 @@ fun VoiceChatScreen(
                 } else {
                     // 使用简单的 Button，通过 pointerInteropFilter 处理按下/松开
                     var isPressed by remember { mutableStateOf(false) }
-                    
+
                     Button(
                         onClick = { },
                         modifier = Modifier
@@ -247,7 +275,7 @@ fun VoiceChatScreen(
                             },
                         enabled = !isProcessing,
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = if (isPressed) MaterialTheme.colorScheme.primaryContainer 
+                            containerColor = if (isPressed) MaterialTheme.colorScheme.primaryContainer
                                             else MaterialTheme.colorScheme.primary
                         )
                     ) {
@@ -255,6 +283,25 @@ fun VoiceChatScreen(
                     }
                 }
             }
+        }
+
+        // ✅ TTS 设置引导对话框
+        if (showTtsSetupDialog) {
+            AlertDialog(
+                onDismissRequest = onDismissTtsDialog,
+                title = { Text("TTS 引擎设置") },
+                text = { Text(ttsSetupMessage) },
+                confirmButton = {
+                    Button(onClick = onOpenTtsSettings) {
+                        Text("去设置")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = onDismissTtsDialog) {
+                        Text("稍后")
+                    }
+                }
+            )
         }
     }
 }
