@@ -87,17 +87,11 @@ class TTSPlayer(
                         postCallback { callback?.onError("TTS 播报失败") }
                     }
 
-                    // ✅ 修复3: 加 API 级别注解
+                    // API 23+ onStop with interrupted param; Kotlin 2.0 needs separate method
                     @RequiresApi(Build.VERSION_CODES.M)
                     override fun onStop(utteranceId: String?, interrupted: Boolean) {
                         isSpeaking = false
                         // 主动停止不视为错误
-                    }
-
-                    @Deprecated("使用 onDone 中的 error 替代")
-                    override fun onError(utteranceId: String) {
-                        isSpeaking = false
-                        postCallback { callback?.onError("TTS 播报失败") }
                     }
                 })
 

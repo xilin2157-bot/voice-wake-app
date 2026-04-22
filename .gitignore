@@ -1,0 +1,21 @@
+# Gradle
+.gradle/
+build/
+*.iml
+local.properties
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~
+
+# macOS
+.DS_Store
+
+# Build outputs
+*.apk
+*.aab
+
+# Kotlin errors
+android/.kotlin/

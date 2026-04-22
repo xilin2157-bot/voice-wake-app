@@ -9,7 +9,9 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -164,11 +166,21 @@ fun VoiceChatScreen(
                 modifier = Modifier.padding(bottom = 16.dp)
             )
 
+            val listState = rememberLazyListState()
+
+            // Auto-scroll to bottom when new messages arrive
+            LaunchedEffect(conversationHistory.size) {
+                if (conversationHistory.isNotEmpty()) {
+                    listState.animateScrollToItem(conversationHistory.size - 1)
+                }
+            }
+
             LazyColumn(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                state = listState
             ) {
                 items(conversationHistory) { message ->
                     ChatBubble(message = message)
@@ -256,9 +268,9 @@ fun ChatBubble(message: MainActivity.ChatMessage) {
     }
 
     val alignment = if (message.isUser) {
-        Alignment.End
+        androidx.compose.ui.Alignment.CenterEnd
     } else {
-        Alignment.Start
+        androidx.compose.ui.Alignment.CenterStart
     }
 
     Box(

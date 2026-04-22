@@ -41,9 +41,7 @@ android {
     buildConfig = true
   }
 
-  composeOptions {
-    kotlinCompilerExtensionVersion = "1.5.15"
-  }
+  // Kotlin 2.0+ has built-in Compose compiler, no need for kotlinCompilerExtensionVersion
 
   packaging {
     resources {
