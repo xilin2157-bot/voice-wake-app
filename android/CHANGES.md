@@ -44,3 +44,34 @@
 - [ ] 协程异常不崩溃
 - [ ] 旋转屏幕不泄漏
 - [ ] 网络请求显示 loading
+
+## 编译修复 (2026-04-22)
+
+### 构建环境
+- ✅ 安装 OpenJDK 17.0.19
+- ✅ 安装 Android SDK 35 + Build Tools 35.0.0
+- ✅ 创建 local.properties
+
+### 编译错误修复
+| 文件 | 错误 | 修复方案 |
+|------|------|----------|
+| build.gradle.kts | Kotlin 2.0 + Compose compiler 冲突 | 移除 kotlinCompilerExtensionVersion |
+| TTSPlayer.kt | onError JVM 签名冲突 | 移除 deprecated onError(String) |
+| MainActivity.kt | Alignment 类型不匹配 | 改用 CenterEnd/CenterStart |
+
+### UI 改进
+- ✅ LazyListState auto-scroll 到最新消息
+- ✅ AndroidManifest: 添加 networkSecurityConfig
+- ✅ App 名称改为中文「语音对话」
+
+### 构建产物
+- ✅ app-debug.apk: 9.8MB (可直接安装)
+- ✅ app-release-unsigned.apk: 6.7MB (需签名)
+
+### 验证清单
+- [x] Debug APK 编译成功
+- [x] Release APK 编译成功
+- [ ] 手机端安装测试
+- [ ] 语音识别测试
+- [ ] API 通信测试
+- [ ] TTS 播报测试
